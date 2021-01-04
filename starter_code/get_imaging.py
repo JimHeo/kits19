@@ -9,7 +9,7 @@ import requests
 import numpy as np
 
 imaging_url = "https://kits19.sfo2.digitaloceanspaces.com/"
-imaging_name_tmplt = "interpolated_{:05d}.nii.gz"
+imaging_name_tmplt = "master_{:05d}.nii.gz"
 temp_f = Path(__file__).parent / "temp.tmp"
 
 
@@ -81,3 +81,6 @@ if __name__ == "__main__":
             cleanup(bar, "KeyboardInterrupt")
         except Exception as e:
             cleanup(bar, str(e))
+
+
+

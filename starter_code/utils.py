@@ -50,3 +50,4 @@ def load_case(cid):
     vol = load_volume(cid)
     seg = load_segmentation(cid)
     return vol, seg
+
