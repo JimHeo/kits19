@@ -59,7 +59,7 @@ def overlay(volume_ims, segmentation_ims, segmentation, alpha):
 
 def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX, 
     k_color=DEFAULT_KIDNEY_COLOR, t_color=DEFAULT_TUMOR_COLOR,
-    alpha=DEFAULT_OVERLAY_ALPHA, plane=DEFAULT_PLANE):
+    alpha=DEFAULT_OVERLAY_ALPHA, plane=DEFAULT_PLANE, is_overlayed=False):
 
     plane = plane.lower()
 
@@ -73,7 +73,7 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
     # Prepare output location
     out_path = Path(destination)
     if not out_path.exists():
-        out_path.mkdir()  
+        out_path.mkdir(parents=True)  
 
     # Load segmentation and volume
     vol, seg = load_case(cid)
@@ -84,22 +84,29 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
     
     # Convert to a visual format
     vol_ims = hu_to_grayscale(vol, hu_min, hu_max)
-    seg_ims = class_to_color(seg, k_color, t_color)
+    if is_overlayed:
+        seg_ims = class_to_color(seg, k_color, t_color)
     
     # Save individual images to disk
     if plane == plane_opts[0]:
         # Overlay the segmentation colors
-        viz_ims = overlay(vol_ims, seg_ims, seg, alpha)
-        for i in range(viz_ims.shape[0]):
-            fpath = out_path / ("{:05d}.png".format(i))
-            imwrite(str(fpath), viz_ims[i])
+        if is_overlayed:
+            viz_ims = overlay(vol_ims, seg_ims, seg, alpha)
+            for i in range(viz_ims.shape[0]):
+                fpath = out_path / ("overlay_{:05d}.png".format(i))
+                imwrite(str(fpath), viz_ims[i])
+        else:
+            for i in range(vol_ims.shape[0]):
+                fpath = out_path / ("imaging_{:05d}.png".format(i))
+                imwrite(str(fpath), vol_ims[i])
+                fpath = out_path / ("segmentation_raw_{:05d}.png".format(i))
+                imwrite(str(fpath), seg[i])
 
     if plane == plane_opts[1]:
         # I use sum here to account for both legacy (incorrect) and 
         # fixed affine matrices
         spc_ratio = np.abs(np.sum(spacing[2,:]))/np.abs(np.sum(spacing[0,:]))
         for i in range(vol_ims.shape[1]):
-            fpath = out_path / ("{:05d}.png".format(i))
             vol_im = scipy.misc.imresize(
                 vol_ims[:,i,:], (
                     int(vol_ims.shape[0]*spc_ratio),
@@ -118,15 +125,21 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
                     int(vol_ims.shape[2])
                 ), interp="nearest"
             )
-            viz_im = overlay(vol_im, seg_im, sim, alpha)
-            imwrite(str(fpath), viz_im)
+            if is_overlayed:
+                viz_im = overlay(vol_im, seg_im, sim, alpha)
+                fpath = out_path / ("overlay_{:05d}.png".format(i))
+                imwrite(str(fpath), viz_im)
+            else:
+                fpath = out_path / ("imaging_{:05d}.png".format(i))
+                imwrite(str(fpath), vol_im)
+                fpath = out_path / ("segmentation_{:05d}.png".format(i))
+                imwrite(str(fpath), sim)
 
     if plane == plane_opts[2]:
         # I use sum here to account for both legacy (incorrect) and 
         # fixed affine matrices
         spc_ratio = np.abs(np.sum(spacing[2,:]))/np.abs(np.sum(spacing[1,:]))
         for i in range(vol_ims.shape[2]):
-            fpath = out_path / ("{:05d}.png".format(i))
             vol_im = scipy.misc.imresize(
                 vol_ims[:,:,i], (
                     int(vol_ims.shape[0]*spc_ratio),
@@ -145,13 +158,20 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
                     int(vol_ims.shape[1])
                 ), interp="nearest"
             )
-            viz_im = overlay(vol_im, seg_im, sim, alpha)
-            imwrite(str(fpath), viz_im)
+            if is_overlayed:
+                viz_im = overlay(vol_im, seg_im, sim, alpha)
+                fpath = out_path / ("overlay_{:05d}.png".format(i))
+                imwrite(str(fpath), viz_im)
+            else:
+                fpath = out_path / ("imaging_{:05d}.png".format(i))
+                imwrite(str(fpath), vol_im)
+                fpath = out_path / ("segmentation_raw_{:05d}.png".format(i))
+                imwrite(str(fpath), sim)
 
 
 if __name__ == '__main__':
     # Parse command line arguments
-    desc = "Overlay a case's segmentation and store it as a series of pngs"
+    desc = "Store it as a series of pngs"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
         "-c", "--case_id", required=True,
@@ -176,11 +196,20 @@ if __name__ == '__main__':
             " (axial, coronal, or sagittal)"
         )
     )
+    parser.add_argument(
+        "-o", "--overlay", required=False, default=False,
+        help="Overlay a case's segmentation"
+    )
     args = parser.parse_args()
+
+    if args.overlay == 'False' or args.overlay == 'false':
+        is_overlayed = False
+    else:
+        is_overlayed = True
 
     # Run visualization
     visualize(
         args.case_id, args.destination, 
         hu_min=args.lower_hu_bound, hu_max=args.upper_hu_bound,
-        plane=args.plane
+        plane=args.plane, is_overlayed=is_overlayed
     )

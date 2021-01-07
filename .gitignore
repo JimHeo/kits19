@@ -4,3 +4,4 @@ data/*
 tfrecord
 exp
 init_models
+data_png
