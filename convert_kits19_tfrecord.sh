@@ -7,6 +7,13 @@ CASE_SET=$(seq -f %05g 0 209)
 CASE=0
 for CASE_00 in $CASE_SET; do
     echo "Converting to tfrecord case_"${CASE_00}" to "${DEST}"..."
-    python build_data_nii_tfrecord.py --case ${CASE} --output-path ${DEST}"/kits19_case_"${CASE_00}"_train.tfrecord"
+    python build_axial_data_nii_tfrecord.py --case ${CASE} --output-path ${DEST}"/kits19_case_"${CASE_00}"_train.tfrecord"
     CASE=$(($CASE+1))
 done
+
+# CASE=0
+# for CASE_00 in $CASE_SET; do
+#     echo "Converting to tfrecord case_"${CASE_00}" to "${DEST}"..."
+#     python build_data_nii_tfrecord.py --case ${CASE} --output-path ${DEST}"/kits19_case_"${CASE_00}"_train.tfrecord"
+#     CASE=$(($CASE+1))
+# done

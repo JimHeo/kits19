@@ -57,12 +57,35 @@ class Encoder:
           'image/format': _bytes_list_feature("nii.gz"),
           'image/height': _int64_list_feature(volume.shape[0]),
           'image/width': _int64_list_feature(volume.shape[1]),
-          'image/channels': _int64_list_feature(volume.shape[3]),
           'image/frame': _int64_list_feature(volume.shape[2]),
+          'image/channels': _int64_list_feature(volume.shape[3]),
           'image/case': _int64_list_feature(case),
           'image/affine': _bytes_list_feature(affine.astype(np.float32).tobytes()),
           'image/segmentation/class/encoded':  _bytes_list_feature(seg.astype(np.int32).tobytes()),
           'image/segmentation/class/format': _bytes_list_feature("nii.gz"),
+      }))
+
+  def encode(self, case, volume, seg, affine, frame, plane='axial'):
+    """Returns numpy axial array as tfrecord string.
+
+    Args:
+      volume: numpy array
+    Returns:
+      tfrecord: tfrecord serialized to string
+    """
+    with tf.name_scope('encode'):
+      return tf.train.Example(features=tf.train.Features(feature={
+          'image/encoded': _bytes_list_feature(volume.tobytes()),
+          'image/format': _bytes_list_feature("png"),
+          'image/height': _int64_list_feature(volume.shape[0]),
+          'image/width': _int64_list_feature(volume.shape[1]),
+          'image/channels': _int64_list_feature(volume.shape[2]),
+          'image/frame': _int64_list_feature(frame),
+          'image/case': _int64_list_feature(case),
+          'image/plane': _bytes_list_feature(plane),
+          'image/affine': _bytes_list_feature(affine.astype(np.float32).tobytes()),
+          'image/segmentation/class/encoded':  _bytes_list_feature(seg.tobytes()),
+          'image/segmentation/class/format': _bytes_list_feature("png"),
       }))
 
 
@@ -75,8 +98,8 @@ class Decoder:
         'image/format': tf.io.VarLenFeature(tf.string),
         'image/height': tf.io.VarLenFeature(tf.int64),
         'image/width': tf.io.VarLenFeature(tf.int64),
-        'image/channels': tf.io.VarLenFeature(tf.int64),
         'image/frame': tf.io.VarLenFeature(tf.int64),
+        'image/channels': tf.io.VarLenFeature(tf.int64),
         'image/case': tf.io.VarLenFeature(tf.int64),
         'image/affine': tf.io.FixedLenFeature([], tf.string),
         'image/segmentation/class/encoded':  tf.io.FixedLenFeature([], tf.string),
@@ -106,3 +129,4 @@ class Decoder:
       seg_format = features['image/segmentation/class/format'].values
       
       return volume, volume_format, height, width, frame, channels, case, affine, seg, seg_format
+      
