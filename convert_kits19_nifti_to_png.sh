@@ -1,7 +1,6 @@
 # python starter_code/visualize.py -c case_00123 -d ./data_png -o False
 
 CASE_SET=$(seq -f %05g 0 209)
-# CASE_SET=$(seq -f %05g 0 2)
 OVERLAY=False
 PLANE="axial"
 

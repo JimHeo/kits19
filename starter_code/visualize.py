@@ -4,6 +4,7 @@ import argparse
 import scipy.misc
 import numpy as np
 from imageio import imwrite
+from tqdm import trange
 
 from starter_code.utils import load_case
 
@@ -29,7 +30,7 @@ def hu_to_grayscale(volume, hu_min, hu_max):
 
     # Return values scaled to 0-255 range, but *not cast to uint8*
     # Repeat three times to make compatible with color overlay
-    im_volume = 255*im_volume
+    im_volume = 255*im_volume.astype(np.uint8)
     return np.stack((im_volume, im_volume, im_volume), axis=-1)
 
 
@@ -80,7 +81,7 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
     spacing = vol.affine
     vol = vol.get_data()
     seg = seg.get_data()
-    seg = seg.astype(np.int32)
+    seg = seg.astype(np.uint8)
     
     # Convert to a visual format
     vol_ims = hu_to_grayscale(vol, hu_min, hu_max)
@@ -92,11 +93,11 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
         # Overlay the segmentation colors
         if is_overlayed:
             viz_ims = overlay(vol_ims, seg_ims, seg, alpha)
-            for i in range(viz_ims.shape[0]):
+            for i in trange(viz_ims.shape[0]):
                 fpath = out_path / ("overlay_{:05d}.png".format(i))
                 imwrite(str(fpath), viz_ims[i])
         else:
-            for i in range(vol_ims.shape[0]):
+            for i in trange(vol_ims.shape[0]):
                 fpath = out_path / ("imaging_{:05d}.png".format(i))
                 imwrite(str(fpath), vol_ims[i])
                 fpath = out_path / ("segmentation_raw_{:05d}.png".format(i))
@@ -106,7 +107,7 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
         # I use sum here to account for both legacy (incorrect) and 
         # fixed affine matrices
         spc_ratio = np.abs(np.sum(spacing[2,:]))/np.abs(np.sum(spacing[0,:]))
-        for i in range(vol_ims.shape[1]):
+        for i in trange(vol_ims.shape[1]):
             vol_im = scipy.misc.imresize(
                 vol_ims[:,i,:], (
                     int(vol_ims.shape[0]*spc_ratio),
@@ -139,7 +140,7 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
         # I use sum here to account for both legacy (incorrect) and 
         # fixed affine matrices
         spc_ratio = np.abs(np.sum(spacing[2,:]))/np.abs(np.sum(spacing[1,:]))
-        for i in range(vol_ims.shape[2]):
+        for i in trange(vol_ims.shape[2]):
             vol_im = scipy.misc.imresize(
                 vol_ims[:,:,i], (
                     int(vol_ims.shape[0]*spc_ratio),

@@ -3,7 +3,7 @@ import numpy as np
 import elasticdeform as els
 import nibabel as nb
 
-vol, seg = load_case(123)
+vol, seg = load_case(0)
 spacing = vol.affine
 vol_data = vol.get_data()
 seg_data = seg.get_data()
