@@ -30,7 +30,7 @@ def hu_to_grayscale(volume, hu_min, hu_max):
 
     # Return values scaled to 0-255 range, but *not cast to uint8*
     # Repeat three times to make compatible with color overlay
-    im_volume = 255*im_volume.astype(np.uint8)
+    im_volume = 255*im_volume
     return np.stack((im_volume, im_volume, im_volume), axis=-1)
 
 
@@ -81,7 +81,8 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
     spacing = vol.affine
     vol = vol.get_data()
     seg = seg.get_data()
-    seg = seg.astype(np.uint8)
+    seg = seg.astype(np.int64)
+    seg_raw = seg.astype(np.uint8)
     
     # Convert to a visual format
     vol_ims = hu_to_grayscale(vol, hu_min, hu_max)
@@ -100,7 +101,9 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
             for i in trange(vol_ims.shape[0]):
                 fpath = out_path / ("imaging_{:05d}.png".format(i))
                 imwrite(str(fpath), vol_ims[i])
-                fpath = out_path / ("segmentation_raw_{:05d}.png".format(i))
+                fpath = out_path / ("segmentation_{:05d}.png".format(i))
+                imwrite(str(fpath), seg_raw[i])
+                fpath = out_path / ("segmentation_{:05d}_vis.png".format(i))
                 imwrite(str(fpath), seg[i])
 
     if plane == plane_opts[1]:
@@ -126,6 +129,12 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
                     int(vol_ims.shape[2])
                 ), interp="nearest"
             )
+            sim_raw = scipy.misc.imresize(
+                seg_raw[:,i,:], (
+                    int(vol_ims.shape[0]*spc_ratio),
+                    int(vol_ims.shape[2])
+                ), interp="nearest"
+            )
             if is_overlayed:
                 viz_im = overlay(vol_im, seg_im, sim, alpha)
                 fpath = out_path / ("overlay_{:05d}.png".format(i))
@@ -134,6 +143,8 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
                 fpath = out_path / ("imaging_{:05d}.png".format(i))
                 imwrite(str(fpath), vol_im)
                 fpath = out_path / ("segmentation_{:05d}.png".format(i))
+                imwrite(str(fpath), sim_raw)
+                fpath = out_path / ("segmentation_{:05d}_vis.png".format(i))
                 imwrite(str(fpath), sim)
 
     if plane == plane_opts[2]:
@@ -159,6 +170,12 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
                     int(vol_ims.shape[1])
                 ), interp="nearest"
             )
+            sim_raw = scipy.misc.imresize(
+                seg[:,:,i], (
+                    int(vol_ims.shape[0]*spc_ratio),
+                    int(vol_ims.shape[1])
+                ), interp="nearest"
+            )
             if is_overlayed:
                 viz_im = overlay(vol_im, seg_im, sim, alpha)
                 fpath = out_path / ("overlay_{:05d}.png".format(i))
@@ -166,7 +183,11 @@ def visualize(cid, destination, hu_min=DEFAULT_HU_MIN, hu_max=DEFAULT_HU_MAX,
             else:
                 fpath = out_path / ("imaging_{:05d}.png".format(i))
                 imwrite(str(fpath), vol_im)
-                fpath = out_path / ("segmentation_raw_{:05d}.png".format(i))
+                fpath = out_path / ("segmentation_{:05d}.png".format(i))
+                imwrite(str(fpath), sim)
+                fpath = out_path / ("segmentation_{:05d}.png".format(i))
+                imwrite(str(fpath), sim_raw)
+                fpath = out_path / ("segmentation_{:05d}_vis.png".format(i))
                 imwrite(str(fpath), sim)
 
 

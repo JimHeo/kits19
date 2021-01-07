@@ -3,13 +3,25 @@ import numpy as np
 import elasticdeform as els
 import nibabel as nb
 
-vol, seg = load_case(0)
-spacing = vol.affine
-vol_data = vol.get_data()
-seg_data = seg.get_data()
-seg_data = seg_data.astype(np.int64)
+# vol, seg = load_case(0)
+# spacing = vol.affine
+# vol_data = vol.get_data()
+# seg_data = seg.get_data()
+# seg_data = seg_data.astype(np.int64)
 
-print(seg_data.shape)
+# print(seg_data.shape)
+sum_t = 0
+for i in range(180):
+    vol, seg = load_case(i)
+    sum_t += vol.shape[0]
+
+sum_v = 0
+for i in range(180, 210):
+    vol, seg = load_case(i)
+    sum_v += vol.shape[0]
+
+print(sum_t, sum_v, sum_t + sum_v)
+# 22594 4869 27463
 
 '''
 # apply deformation with a random 3 x 3 grid
