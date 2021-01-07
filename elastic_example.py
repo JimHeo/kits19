@@ -9,7 +9,9 @@ vol_data = vol.get_data()
 seg_data = seg.get_data()
 seg_data = seg_data.astype(np.int64)
 
+print(seg_data.shape)
 
+'''
 # apply deformation with a random 3 x 3 grid
 [vol_deformed, seg_deformed] = els.deform_random_grid([vol_data, seg_data], order=[3, 0])
 
@@ -24,3 +26,4 @@ nb.save(seg_deformed_nii, "seg_deformed.nii.gz")
 
 # imageio.imsave('test_X.png', X)
 # imageio.imsave('test_X_deformed.png', X_deformed)
+'''

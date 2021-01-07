@@ -102,7 +102,7 @@ class Decoder:
       channels = features['image/channels'].values
       case = features['image/case'].values
       affine = tf.io.decode_raw(features['image/affine'], tf.float32)
-      seg = tf.io.decode_raw(features['image/segmentation/class/encoded', tf.int32])
+      seg = tf.io.decode_raw(features['image/segmentation/class/encoded'], tf.int32)
       seg_format = features['image/segmentation/class/format'].values
       
       return volume, volume_format, height, width, frame, channels, case, affine, seg, seg_format

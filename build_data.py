@@ -4,6 +4,7 @@ import numpy as np
 import nibabel as nb
 import argparse
 import os
+from pathlib import Path
 from numpy.lib.twodim_base import vander
 import tensorflow as tf
 
@@ -30,7 +31,9 @@ def convert_nii_to_tfrecord(case: int, output_path):
 def convert_tfrecord_to_nii(input_path, output_path):
     decoder = ioutil.TFRecordDecoder()
   
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    out_path = Path(output_path)
+    if not out_path.exists():
+        out_path.mkdir(parents=True)
   
     tf_dataset = tf.data.TFRecordDataset(filenames=input_path, compression_type='GZIP')
     for serialized_example in tf_dataset:
@@ -47,8 +50,8 @@ def convert_tfrecord_to_nii(input_path, output_path):
     seg = ioutil.tensor_to_voxel_space(s)
     vol_nii = nb.Nifti1Image(volume, affine=a)
     seg_nii = nb.Nifti1Image(seg, affine=a)
-    nb.save(vol_nii, output_path)
-    nb.save(seg_nii, output_path + '.seg')
+    nb.save(vol_nii, output_path + '/imaging.nii.gz')
+    nb.save(seg_nii, output_path + '/segmentation.nii.gz')
     
     # tf.logging.info(f'Wrote {input_path} to {output_path}')
     tf.compat.v1.logging.info(f'Wrote {input_path} to {output_path}')
@@ -58,7 +61,7 @@ def main(args):
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
     if args.convert_to == 'tfrecord':
-        if args.case:
+        if args.case != -1:
             convert_nii_to_tfrecord(args.case, args.output_path)
     elif args.convert_to == 'nifti' or args.convert_to == 'nii' :
         if args.input_path:
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     Converts NIfTI volumes to tfrecord.
     ''')
     parser.add_argument('--convert-to', default='tfrecord', choices=['tfrecord', 'nii', 'nifti'])
-    parser.add_argument('--case', type=int)
+    parser.add_argument('--case', type=int, default=-1)
     parser.add_argument('--output-path', required=True)
     parser.add_argument('--input-path')
 
